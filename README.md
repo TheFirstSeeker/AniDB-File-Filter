@@ -6,11 +6,15 @@ It can filter by Chapters, one Audio track (Language, Codec, Channels), one Subt
 
 # Changelog
 1.0
+
 Initial Release
 
 1.1
+
 Added 'Length' filter to 'Video'.
+
 Reworked video filter to be more efficient (Also fixes odd line marking).
+
 Chnage 'Presentation Graphic Stream' to 'PGS' to save space.
 
 # Screenshots
