@@ -1,13 +1,18 @@
 // ==UserScript==
 // @name			AniDB File Filter
 // @namespace		Seeker01
-// @version			1.0.0
+// @version			1.1.0
 // @description     Allows you to filter files by formats and properties
 // @author			Seeker
 // @match			http://anidb.net/episode/*
 // @match			https://anidb.net/episode/*
 // @grant			none
 // ==/UserScript==
+
+// function to convert time to seconds
+function TimeToSeconds(time) {
+    return time.split(':').reduce((acc,time) => (60 * acc) + +time);
+}
 
 // function from another userscript
 function MarkOddLines(NodeList) {
@@ -68,7 +73,13 @@ function FindAudioSub(NodeList, type, parameters, filterOptions) {
     var query = "span[title*='" + type + "']";
     for (var i = 0; i < parameters.length; i++) {
         if (parameters[i].value != filterOptions[i]){
-            query += "[title*='" + filterOptions[i].toLowerCase() + ": " + parameters[i].value + "']";
+            if (parameters[i].value == "PGS") {
+                query += "[title*='" + filterOptions[i].toLowerCase() + ": Presentation Graphic Stream']";
+            }
+
+            else {
+                query += "[title*='" + filterOptions[i].toLowerCase() + ": " + parameters[i].value + "']";
+            }
         }
     }
 
@@ -96,104 +107,109 @@ function FindVideo(NodeList, parameters, filterOptions) {
     var HideList = [];
     var FilteredList = [];
 
+    for (var i = 0; i < NodeList.length; i++) {
+        FilteredList.push(NodeList[i]);
+    }
+
     // filter by extension
     if (parameters[0].value != filterOptions[0]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (!NodeList[i].querySelector("span[title*='type: video'][title*='" + parameters[0].value + "']")) {
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (!FilteredList[i].querySelector("span[title*='type: video'][title*='" + parameters[0].value + "']")) {
                 HideList.push(NodeList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
-    
-            else {
-                FilteredList.push(NodeList[i]);
+        }
+    }
+
+    // filter by length
+    if (parameters[1].value != filterOptions[1]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (!FilteredList[i].querySelector("span[title*='type: video'][title*='" + parameters[1].value + "']")) {
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
     }
 
     // filter by codec
-    if (parameters[1].value != filterOptions[1]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (!NodeList[i].querySelector("a[title*='video'][title*='codec: " + parameters[1].value + "']")) {
-                HideList.push(NodeList[i]);
-            }
-    
-            else {
-                FilteredList.push(NodeList[i]);
+    if (parameters[2].value != filterOptions[2]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (!FilteredList[i].querySelector("a[title*='video'][title*='codec: " + parameters[2].value + "']")) {
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
     }
 
     // filter by width
-    if (parameters[2].value != filterOptions[2]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (NodeList[i].querySelector("td.resolution").textContent.split("x")[0]) {
-                if (!NodeList[i].querySelector("td.resolution").textContent.split("x")[0].includes(parameters[2].value)) {
-                    HideList.push(NodeList[i]);
-                }
-    
-                else {
-                    FilteredList.push(NodeList[i]);
+    if (parameters[3].value != filterOptions[3]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (FilteredList[i].querySelector("td.resolution").textContent.split("x")[0]) {
+                if (!FilteredList[i].querySelector("td.resolution").textContent.split("x")[0].includes(parameters[3].value)) {
+                    HideList.push(FilteredList[i]);
+                    FilteredList.splice(i, 1);
+                    i--;
                 }
             }
     
             else {
-                HideList.push(NodeList[i]);
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
     }
 
     // filter by height
-    if (parameters[3].value != filterOptions[3]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (NodeList[i].querySelector("td.resolution").textContent.split("x")[1]) {
-                if (!NodeList[i].querySelector("td.resolution").textContent.split("x")[1].includes(parameters[3].value)){
-                    HideList.push(NodeList[i]);
-                }
-    
-                else {
-                    FilteredList.push(NodeList[i]);
+    if (parameters[4].value != filterOptions[4]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (FilteredList[i].querySelector("td.resolution").textContent.split("x")[1]) {
+                if (!FilteredList[i].querySelector("td.resolution").textContent.split("x")[1].includes(parameters[4].value)){
+                    HideList.push(FilteredList[i]);
+                    FilteredList.splice(i, 1);
+                    i--;
                 }
             }
     
             else {
-                HideList.push(NodeList[i]);
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
     }
 
     // filter by bit depth
-    if (parameters[4].value != filterOptions[4]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (NodeList[i].querySelector("span[title*='bit']")) {
-                if (!NodeList[i].querySelector("span[title*='bit']").textContent.includes(parameters[4].value)) {
-                    HideList.push(NodeList[i]);
-                }
-    
-                else {
-                    FilteredList.push(NodeList[i]);
+    if (parameters[5].value != filterOptions[5]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (FilteredList[i].querySelector("span[title*='bit']")) {
+                if (!FilteredList[i].querySelector("span[title*='bit']").textContent.includes(parameters[5].value)) {
+                    HideList.push(FilteredList[i]);
+                    FilteredList.splice(i, 1);
+                    i--;
                 }
             }
 
             else {
-                HideList.push(NodeList[i]);
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
     }
 
     // filter by source
-    if (parameters[5].value != filterOptions[5]){
-        for (var i = 0; i < NodeList.length; i++) {
-            if (NodeList[i].querySelector("td.source").textContent != parameters[5].value) {
-                HideList.push(NodeList[i]);
-            }
-    
-            else {
-                FilteredList.push(NodeList[i]);
+    if (parameters[6].value != filterOptions[6]){
+        for (var i = 0; i < FilteredList.length; i++) {
+            if (FilteredList[i].querySelector("td.source").textContent != parameters[6].value) {
+                HideList.push(FilteredList[i]);
+                FilteredList.splice(i, 1);
+                i--;
             }
         }
-    }
-    
-    if (FilteredList.length == 0) {
-        FilteredList = NodeList;
     }
 
     return [HideList, FilteredList];
@@ -221,14 +237,14 @@ function ApplyFilters(NodeList, labels) {
     var Results = [];
     var HideList = [];
     var filterTypes = ["chapters", "audio", "sub", "video"];
-    var filterOptions = [[],["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
+    var filterOptions = [[],["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
 
     for (var i = 0; i < filterTypes.length; i++) {
         Results = FindNodes(NodeList, filterTypes[i], labels[i], filterOptions[i]);
         HideList = HideList.concat(Results[0]);
         NodeList = Results[1];
     }
-
+    
     HideEntries(HideList);
     MarkOddLines(NodeList);
 
@@ -322,7 +338,7 @@ function GetSubData(NodeList) {
         }
     }
 
-    // get unique values of parameters "language", "codec" and "type" from ''sub' titles
+    // get unique values of parameters "language", "codec" and "type" from 'sub' titles
     UniqueList = GetUniqueValues(TitleList, [1, 2, 3]);
 
     langtemp = UniqueList[0];
@@ -335,6 +351,16 @@ function GetSubData(NodeList) {
     for (var i = 0; i < langtemp.length; i++) {
         if (!lang.includes(langtemp[i])) {
             lang.push(langtemp[i]);
+        }
+    }
+
+    // Save Presentation Graphic Stream as PGS
+    if (codec.includes("Presentation Graphic Stream")) {
+        for (var i = 0; i < codec.length; i++) {
+            if (codec[i] == "Presentation Graphic Stream") {
+                codec[i] = "PGS";
+                break;
+            }
         }
     }
 
@@ -357,6 +383,7 @@ function GetSubData(NodeList) {
 // extracts video data from table
 function GetVideoData(NodeList) {
     var ExtList = [];
+    var LenList = [];
     var CodecList = [];
     var ResList = [];
     var DepthList = [];
@@ -366,6 +393,7 @@ function GetVideoData(NodeList) {
     var ETitleList = [];
     
     var ext = [];
+    var len = [];
     var codec = [];
     var width = [];
     var height = [];
@@ -410,16 +438,29 @@ function GetVideoData(NodeList) {
         }
     }
 
-    // get unique values of parameters "extension" and "codec"
+    // get unique values of parameters "extension", "length" and "codec"
     ext = GetUniqueValues(ETitleList, [1])[0];
     codec = GetUniqueValues(CTitleList, [2])[0];
+    
+    for (var i = 0; i < ETitleList.length; i++) {
+        if (ETitleList[i].split("|")[2]) {
+            if (!len.includes(ETitleList[i].split("|")[2].substring(8).trim())) {
+                len.push(ETitleList[i].split("|")[2].substring(8).trim());
+            }
+        }
+    }
 
-    output = [ext, codec, width, height, depth, source];
+    output = [ext, len, codec, width, height, depth, source];
     
     // sort the lists and move "unknown" and "N/A" to the end
     for (var i = 0; i < output.length; i++) {
-        if (i != 2 && i != 3) {
+        if (i != 1 && i != 3 && i != 4) {
             output[i].sort();
+        }
+
+        // sort length
+        else if (i == 1) {
+            output[i].sort(function(a, b) {return TimeToSeconds(b) - TimeToSeconds(a);});
         }
 
         // sort resolution list using width and height
@@ -478,7 +519,7 @@ function AddOptions(NodeList, filters) {
     var Data = [AudioData, SubData, VideoData];
 
     //Get filter drop down menus
-    filterMenu = filters.querySelectorAll('select');
+    var filterMenu = filters.querySelectorAll('select');
 
     if (filterMenu[0].length != 1){
         // //disable filtered options
@@ -501,7 +542,7 @@ function AddOptions(NodeList, filters) {
         for (var i = 0; i < Data.length; i++) {
             for (var j = 0; j < Data[i].length; j++) {
                 for (var k = 0; k < Data[i][j].length; k++) {
-                    option = document.createElement("option");
+                    var option = document.createElement("option");
                     option.text = Data[i][j][k];
                     filterMenu[(i * Data.length) + j].add(option);
                 }
@@ -519,7 +560,7 @@ function Filter(NodeList, filters) {
 
 // function to reset filters
 function ResetFilters(NodeList, filters) {
-    filterMenu = filters.querySelectorAll('select');
+    var filterMenu = filters.querySelectorAll('select');
 
     for (var i = 0; i < filterMenu.length; i++) {
         filterMenu[i].selectedIndex = 0;
@@ -555,7 +596,7 @@ function CreateFilterButtons(filter){
 
     // Create drop down menus for filters
     var filterTypes = [" Audio ", " Subtitles ", " Video "];
-    var filterOptions = [["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
+    var filterOptions = [["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
 
     for (var i = 0; i < filterTypes.length; i++) {
         var filterName = document.createElement('label');
@@ -587,7 +628,7 @@ function CreateFilters(){
     AddOptions(NodeList, filters);
 
     //Get filter drop down menus
-    filterMenu = filters.querySelectorAll('select');
+    var filterMenu = filters.querySelectorAll('select');
 
     // add event listener to drop down menus
     for (var i = 0; i < filterMenu.length; i++) {
