@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name			AniDB File Filter
 // @namespace		Seeker01
-// @version			1.1.0
+// @version			1.2.0
 // @description     Allows you to filter files by formats and properties
 // @author			Seeker
 // @match			http://anidb.net/episode/*
@@ -65,27 +65,14 @@ function FindChapters(NodeList, parameter) {
     return [HideList, FilteredList];
 }
 
-// function to find audio and subtitle entries
-function FindAudioSub(NodeList, type, parameters, filterOptions) {
+// function to find supplementary subs
+function FindSup(NodeList, parameter) {
     var HideList = [];
     var FilteredList = [];
 
-    var query = "span[title*='" + type + "']";
-    for (var i = 0; i < parameters.length; i++) {
-        if (parameters[i].value != filterOptions[i]){
-            if (parameters[i].value == "PGS") {
-                query += "[title*='" + filterOptions[i].toLowerCase() + ": Presentation Graphic Stream']";
-            }
-
-            else {
-                query += "[title*='" + filterOptions[i].toLowerCase() + ": " + parameters[i].value + "']";
-            }
-        }
-    }
-
-    if (query != "span[title*='" + type + "']") {
+    if (parameter) {
         for (var i = 0; i < NodeList.length; i++) {
-            if (!NodeList[i].querySelector(query)) {
+            if (!NodeList[i].querySelector("span[title*=supplementary]")) {
                 HideList.push(NodeList[i]);
             }
 
@@ -95,7 +82,70 @@ function FindAudioSub(NodeList, type, parameters, filterOptions) {
         }
     }
 
-    else {
+    if (FilteredList.length == 0) {
+        FilteredList = NodeList;
+    }
+
+    return [HideList, FilteredList];
+}
+
+// function to find audio and subtitle entries
+function FindAudioSub(NodeList, type, parameters, filterOptions) {
+    var HideList = [];
+    var FilteredList = [];
+    var ParamSelect = parameters.querySelectorAll("select");
+    var ParamCheck = parameters.querySelectorAll("input");
+
+    if (ParamSelect.length) {
+        var query = "span[title*='" + type + "']";
+
+        for (var i = 0; i < ParamSelect.length; i++) {
+            if (ParamSelect[i].value != filterOptions[i]){
+                if (ParamSelect[i].value == "PGS") {
+                    query += "[title*='" + filterOptions[i].toLowerCase() + ": Presentation Graphic Stream']";
+                }
+
+                else {
+                    query += "[title*='" + filterOptions[i].toLowerCase() + ": " + ParamSelect[i].value + "']";
+                }
+            }
+        }
+
+        if (query != "span[title*='" + type + "']") {
+            for (var i = 0; i < NodeList.length; i++) {
+                if (!NodeList[i].querySelector(query)) {
+                    HideList.push(NodeList[i]);
+                }
+
+                else {
+                    FilteredList.push(NodeList[i]);
+                }
+            }
+        }
+
+
+        else {
+            FilteredList = NodeList;
+        }
+    }
+    
+    if (ParamCheck.length != 0) {
+        if (ParamCheck[0].checked) {
+            var query = "span[title*='sub'][title*='" + filterOptions[0].toLowerCase() + "']";
+    
+            for (var i = 0; i < NodeList.length; i++) {
+                if (!NodeList[i].querySelector(query)) {
+                    HideList.push(NodeList[i]);
+                }
+    
+                else {
+                    FilteredList.push(NodeList[i]);
+                }
+            }
+        }
+    }
+
+    if (FilteredList.length == 0) {
         FilteredList = NodeList;
     }
 
@@ -110,12 +160,12 @@ function FindVideo(NodeList, parameters, filterOptions) {
     for (var i = 0; i < NodeList.length; i++) {
         FilteredList.push(NodeList[i]);
     }
-
     // filter by extension
     if (parameters[0].value != filterOptions[0]){
         for (var i = 0; i < FilteredList.length; i++) {
+            debugger
             if (!FilteredList[i].querySelector("span[title*='type: video'][title*='" + parameters[0].value + "']")) {
-                HideList.push(NodeList[i]);
+                HideList.push(FilteredList[i]);
                 FilteredList.splice(i, 1);
                 i--;
             }
@@ -218,7 +268,6 @@ function FindVideo(NodeList, parameters, filterOptions) {
 // function to find entries and filter them
 function FindNodes(NodeList, type, parameters, filterOptions) {
     if (type == "audio" || type == "sub") {
-        parameters = parameters.querySelectorAll("select");
         return FindAudioSub(NodeList, type, parameters, filterOptions);
     }
 
@@ -236,8 +285,8 @@ function FindNodes(NodeList, type, parameters, filterOptions) {
 function ApplyFilters(NodeList, labels) {
     var Results = [];
     var HideList = [];
-    var filterTypes = ["chapters", "audio", "sub", "video"];
-    var filterOptions = [[],["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
+    var filterTypes = ["chapters", "audio", "sub", "sub", "sub", "video"];
+    var filterOptions = [[], ["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Supplementary"], ["Hard Sub"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
 
     for (var i = 0; i < filterTypes.length; i++) {
         Results = FindNodes(NodeList, filterTypes[i], labels[i], filterOptions[i]);
@@ -377,7 +426,7 @@ function GetSubData(NodeList) {
         }
     }
 
-    return [lang, codec, type];
+    return [lang, codec];
 }
 
 // extracts video data from table
@@ -539,13 +588,16 @@ function AddOptions(NodeList, filters) {
 
     else {
         //add new options
+        var filterMenuIndex = 0;
         for (var i = 0; i < Data.length; i++) {
             for (var j = 0; j < Data[i].length; j++) {
                 for (var k = 0; k < Data[i][j].length; k++) {
                     var option = document.createElement("option");
                     option.text = Data[i][j][k];
-                    filterMenu[(i * Data.length) + j].add(option);
+                    filterMenu[filterMenuIndex].add(option);
                 }
+
+                filterMenuIndex++;
             }
         }
     }
@@ -561,9 +613,14 @@ function Filter(NodeList, filters) {
 // function to reset filters
 function ResetFilters(NodeList, filters) {
     var filterMenu = filters.querySelectorAll('select');
+    var checkboxes = filters.querySelectorAll('input');
 
     for (var i = 0; i < filterMenu.length; i++) {
         filterMenu[i].selectedIndex = 0;
+    }
+
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = false;
     }
 
     Filter(NodeList, filters);
@@ -585,18 +642,22 @@ function CreateFilterButtons(filter){
     indentedAppend(editActions, editActions.children[0]);
     
     // Create Checkbox for chapters
-    var filterChapters = document.createElement('label');
-    filterChapters.innerHTML = '<b>Chapters </b>';
+    var checkboxOptions = ["Chapters ", " Signs ", " Hard Subs "];
+
+    var checkbox = document.createElement('label');
+    checkbox.innerHTML = '<b>'+ checkboxOptions[0] + '</b>';
     
-    var chaptersCheckbox = document.createElement('input');
-    chaptersCheckbox.type = 'checkbox';
-    chaptersCheckbox.id = 'Chapters';
-    filterChapters.appendChild(chaptersCheckbox);
-    filter.appendChild(filterChapters);
+    var checkboxInput = document.createElement('input');
+    checkboxInput.type = 'checkbox';
+    checkboxInput.id = checkboxOptions[0].trimEnd();
+    checkbox.appendChild(checkboxInput);
+    filter.appendChild(checkbox);
+
+    // Add Chapter filter checkbox
 
     // Create drop down menus for filters
     var filterTypes = [" Audio ", " Subtitles ", " Video "];
-    var filterOptions = [["Language", "Codec", "Channels"], ["Language", "Codec", "Type"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
+    var filterOptions = [["Language", "Codec", "Channels"], ["Language", "Codec"], ["Extension", "Length", "Codec", "Width", "Height", "Bit-Depth", "Source"]];
 
     for (var i = 0; i < filterTypes.length; i++) {
         var filterName = document.createElement('label');
@@ -611,6 +672,20 @@ function CreateFilterButtons(filter){
         }
 
         filter.appendChild(filterName);
+
+        // Create checkboxes for signs and hard subs
+        if (filterTypes[i] == " Subtitles ") {
+            for (var j = 1; j < checkboxOptions.length; j++) {
+                var checkbox = document.createElement('label');
+                checkbox.innerHTML = '<b>'+ checkboxOptions[j] + '</b>';
+        
+                var checkboxInput = document.createElement('input');
+                checkboxInput.type = 'checkbox';
+                checkboxInput.id = checkboxOptions[j].trim();
+                checkbox.appendChild(checkboxInput);
+                filter.appendChild(checkbox);
+            }
+        }
     }
 }
 
@@ -635,8 +710,14 @@ function CreateFilters(){
         filterMenu[i].addEventListener('change', function(){Filter(NodeList, filters);});
     }
 
+
+    // Get checkboxes
+    var checkboxes = filters.querySelectorAll('input');
+
     // add event listener to checkbox
-    filters.querySelector('#Chapters').addEventListener('change', function(){Filter(NodeList, filters);});
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].addEventListener('change', function(){Filter(NodeList, filters);});
+    }
 
     // add event listener to reset button
     filters.parentElement.querySelector('div.edit_actions').children[0].addEventListener('click', function(){ResetFilters(NodeList, filters);});
