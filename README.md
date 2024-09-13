@@ -15,7 +15,13 @@ Added 'Length' filter to 'Video'.
 
 Reworked video filter to be more efficient (Also fixes odd line marking).
 
-Chnage 'Presentation Graphic Stream' to 'PGS' to save space.
+Change 'Presentation Graphic Stream' to 'PGS' to save space.
+
+1.2
+
+Replaced "Type" subs filter with checkboxes for supplementary tracks (Signs & Songs) and Hard Subs.
+
+Fixed a bug with "extension" video filter.
 
 # Screenshots
 ![Filters](https://files.catbox.moe/58toat.png)
