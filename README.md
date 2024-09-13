@@ -23,6 +23,8 @@ Replaced "Type" subs filter with checkboxes for supplementary tracks (Signs & So
 
 Fixed a bug with "extension" video filter.
 
+Fixed Checkboxes not reseting with Reset button.
+
 # Screenshots
 ![Filters](https://files.catbox.moe/58toat.png)
 
