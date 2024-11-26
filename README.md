@@ -4,26 +4,29 @@ I wrote this script to learn JS basics. It's pretty messy but it gets the job do
 
 It can filter by Chapters, one Audio track (Language, Codec, Channels), one Subtitle Track (Language, Codec, Type), and the Video Track (Extension, Length, Codec, Width, Height, Bit-Depth, Source).
 
+# Note
+Because of how AniDB stores data on the page, this script can only see the first two audio tracks and first two subtitle tracks for each file. Language filters work for all tracks. If you need to use the non-language filter, make sure that the language you need is among the first two tracks of the file. Alternatively, you can just filter by language and check each file individually.
+
 # Changelog
 1.0
 
-Initial Release
+* Initial Release
 
 1.1
 
-Added 'Length' filter to 'Video'.
+* Added 'Length' filter to 'Video'.
 
-Reworked video filter to be more efficient (Also fixes odd line marking).
+* Reworked video filter to be more efficient (Also fixes odd line marking).
 
-Change 'Presentation Graphic Stream' to 'PGS' to save space.
+* Change 'Presentation Graphic Stream' to 'PGS' to save space.
 
 1.2
 
-Replaced "Type" subs filter with checkboxes for supplementary tracks (Signs & Songs) and Hard Subs.
+* Replaced "Type" subs filter with checkboxes for supplementary tracks (Signs & Songs) and Hard Subs.
 
-Fixed a bug with "extension" video filter.
+* Fixed a bug with "extension" video filter.
 
-Fixed Checkboxes not reseting with Reset button.
+* Fixed Checkboxes not reseting with Reset button.
 
 # Screenshots
 ![Filters](https://files.catbox.moe/58toat.png)
